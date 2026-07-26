@@ -75,7 +75,7 @@ except Exception:
 
 # Put your ntfy topic between the last set of quotes. Free, no signup.
 # Pick something weird; anyone who knows the topic can read your alerts.
-NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "alex-ch-drops-7k2m9x")
+NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 
 # Optional Discord channel webhook, instead of or alongside ntfy.
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
