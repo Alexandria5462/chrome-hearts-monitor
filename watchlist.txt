@@ -1,0 +1,38 @@
+# WATCHLIST
+# One URL per line. Lines starting with # are ignored.
+# These get checked EVERY run, no matter what, and you get an alert the
+# moment one becomes available. Put the stuff you actually want here.
+#
+# Tip: to watch a specific size, copy the URL with the size already selected
+# on the page -- the ?dwvar_..._size=... part matters.
+
+# --- currently unavailable (these bounce to the homepage) ---
+https://www.chromehearts.com/hoodie/black-hoodie/152701BLKXXX04K.html
+https://www.chromehearts.com/rib-tank/baby-blue-rib-tank/009103BUYSML259.html
+https://www.chromehearts.com/after-school-flannel-shorts/213616AZJXXX00D.html
+https://www.chromehearts.com/hat/blue-watch-cap/053702C4BXXX316.html
+
+# --- currently available (kept here to catch them selling out and returning) ---
+https://www.chromehearts.com/eyewear/hollyweird/21761920SE5101X.html
+https://www.chromehearts.com/socks/ch-logo-socks/176354XXXXXX349.html?dwvar_176354XXXXXX349_color=BLK&dwvar_176354XXXXXX349_size=SML
+https://www.chromehearts.com/boxers-leggings/boxer-brief---classic-rib/209670XXXXXXXXX.html
+https://www.chromehearts.com/boxers-leggings/foti-boxer-brief---long/208280XXXXXXXXX.html
+https://www.chromehearts.com/intimates/ch-plus-tights/092826AI6XXXXXX.html
+
+# --- returned 404, page does not exist right now ---
+# https://www.chromehearts.com/hat/trucker-hat/196451DAYOSZ262.html
+
+# --- added from second batch (all currently sold out) ---
+https://www.chromehearts.com/shirt/long-sleeve-pocket-crew/129112BLKSML00N.html
+https://www.chromehearts.com/hat/trucker-hat/208948BLKOSZ00T.html
+https://www.chromehearts.com/slippers/cord-slippers/180539ABDXXX593.html
+https://www.chromehearts.com/shirt/short-sleeve-pocket-crew/129111BLKSML756.html
+https://www.chromehearts.com/hoodie/rolling-stones-hoodie/201420WHTXXX766.html
+https://www.chromehearts.com/shirt/v89-dagger/129112NVYXXX745.html
+https://www.chromehearts.com/goggles/goggles/21124419WXXX00O.html
+https://www.chromehearts.com/jewelry-roll/jewelry-roll/180134P62XXXU91.html
+
+# --- third batch ---
+https://www.chromehearts.com/love-you-crew-sweatshirt/196533WHTXXX01Z.html
+https://www.chromehearts.com/boots/sugar-jones-boots-black/196458A56XXX804.html
+https://www.chromehearts.com/silichrome/crossball-charm/218675H1UXXXOON.html
