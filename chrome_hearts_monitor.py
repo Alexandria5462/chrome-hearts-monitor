@@ -95,6 +95,11 @@ PROBE_CATEGORIES_EVERY_N_RUNS = 24
 # the note in the guide. It turns off HTTPS certificate checking.
 VERIFY_SSL = True
 
+# Some category pages flip between live and empty on their own (/eyewear does
+# this). Without a guard you would get a "category opened" alert every time it
+# flapped back. Only alert if it has genuinely been quiet this long.
+FLAP_SUPPRESS_HOURS = 12
+
 # Seconds between requests, randomised. Do not lower these.
 DELAY_MIN = 1.5
 DELAY_MAX = 3.5
@@ -584,9 +589,13 @@ def db_connect():
     conn.execute("""
         CREATE TABLE IF NOT EXISTS categories (
             path TEXT PRIMARY KEY, live INTEGER, confirmed INTEGER,
-            first_seen TEXT, went_live TEXT, last_probed TEXT
+            first_seen TEXT, went_live TEXT, last_probed TEXT, last_live TEXT
         )""")
     conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
+    # migrate older databases in place
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(categories)")}
+    if "last_live" not in cols:
+        conn.execute("ALTER TABLE categories ADD COLUMN last_live TEXT")
     conn.commit()
     return conn
 
@@ -643,6 +652,18 @@ def save_product(conn, pid, url, lastmod, state, checked):
           now_iso(), now_iso(), now_iso() if checked else None))
 
 
+def hours_since(iso_ts):
+    if not iso_ts:
+        return None
+    try:
+        then = datetime.fromisoformat(iso_ts)
+    except ValueError:
+        return None
+    if then.tzinfo is None:
+        then = then.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - then).total_seconds() / 3600.0
+
+
 def save_category(conn, path, live):
     """confirmed = we know this section is real, either because a real product
     URL proved it or because we have seen it live. Everything else is just a
@@ -651,15 +672,17 @@ def save_category(conn, path, live):
     confirmed = 1 if (live or path in SEED_CATEGORIES) else 0
     conn.execute("""
         INSERT INTO categories
-            (path, live, confirmed, first_seen, went_live, last_probed)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (path, live, confirmed, first_seen, went_live, last_probed, last_live)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(path) DO UPDATE SET
             live = excluded.live,
             confirmed = MAX(categories.confirmed, excluded.confirmed),
             went_live = CASE WHEN excluded.live = 1 AND categories.went_live IS NULL
                              THEN excluded.last_probed ELSE categories.went_live END,
-            last_probed = excluded.last_probed
-    """, (path, 1 if live else 0, confirmed, ts, ts if live else None, ts))
+            last_probed = excluded.last_probed,
+            last_live = COALESCE(excluded.last_live, categories.last_live)
+    """, (path, 1 if live else 0, confirmed, ts, ts if live else None, ts,
+          ts if live else None))
 
 
 # ---------------------------------------------------------------------------
@@ -753,7 +776,14 @@ def run(init=False):
         if is_live and not was_known and not init:
             new_cats.append(path)
         elif is_live and was_known and not known_cats[path] and not init:
-            opened_cats.append(path)
+            # Was it live very recently? Then this is flapping, not a launch.
+            row = conn.execute(
+                "SELECT last_live FROM categories WHERE path = ?", (path,)).fetchone()
+            age = hours_since(row[0]) if row else None
+            if age is not None and age < FLAP_SUPPRESS_HOURS:
+                log(f"  {path} flapped back (live {age:.1f}h ago) -- not alerting")
+            else:
+                opened_cats.append(path)
 
         # Save every category we actually got an answer for. The empty ones
         # are the interesting list -- that is the staging area to watch.
