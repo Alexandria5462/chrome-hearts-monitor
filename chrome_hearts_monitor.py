@@ -696,10 +696,17 @@ def notify(title, body, url=None):
             headers = {"Title": title, "Priority": "high", "Tags": "gem"}
             if url:
                 headers["Click"] = url
-            requests.post(f"https://ntfy.sh/{NTFY_TOPIC}",
-                          data=body.encode("utf-8"), headers=headers,
-                          timeout=15, verify=VERIFY_SSL)
-            sent = True
+            resp = requests.post(f"https://ntfy.sh/{NTFY_TOPIC}",
+                                 data=body.encode("utf-8"), headers=headers,
+                                 timeout=15, verify=VERIFY_SSL)
+            if resp.status_code >= 400:
+                # Previously this was ignored, so a rejected message looked
+                # exactly like a delivered one.
+                log(f"  ntfy REJECTED it: HTTP {resp.status_code}")
+                log(f"  ntfy said: {resp.text[:200]}")
+            else:
+                log(f"  ntfy accepted it (HTTP {resp.status_code})")
+                sent = True
         except requests.exceptions.SSLError:
             log("  ntfy failed: HTTPS certificate rejected.")
             log("  Your network is intercepting HTTPS. Fix it with:")
@@ -1068,7 +1075,17 @@ def main():
         log(f"Windows certificate store in use: {'YES' if _TRUSTSTORE else 'NO'}"
             f"{'' if _TRUSTSTORE else '  <- run: pip install truststore'}")
         log(f"HTTPS verification: {'on' if VERIFY_SSL else 'OFF'}")
-        log(f"ntfy topic: {NTFY_TOPIC or '(not set)'}")
+        # GitHub masks the secret itself, so describe it instead of printing it
+        if NTFY_TOPIC:
+            clean = NTFY_TOPIC.strip()
+            log(f"ntfy topic: {len(NTFY_TOPIC)} characters, "
+                f"starts '{clean[:3]}', ends '{clean[-2:]}'")
+            if NTFY_TOPIC != clean:
+                log("  WARNING: topic has stray spaces or newlines around it")
+            if "/" in NTFY_TOPIC or "ntfy.sh" in NTFY_TOPIC:
+                log("  WARNING: topic should be JUST the name, not a URL")
+        else:
+            log("ntfy topic: (NOT SET -- the secret is not reaching the script)")
         notify("Test alert", "If you can read this, notifications work.",
                url=BASE)
         log("Test notification sent.")
